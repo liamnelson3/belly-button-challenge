@@ -4,7 +4,7 @@ let dataPromise = d3.json(endpoint);
 console.log("Data Promise: ", dataPromise);
 
 function init (){
-  let data = d3.json(url).then(function(data) {
+  let data = d3.json(endpoint).then(function(data) {
     console.log(data);
 
     let names = data.names;
