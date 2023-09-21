@@ -19,7 +19,6 @@ function init (){
     plotBarChart(samples[0]);
     plotBubbleChart(samples[0]);
     plotMetaData(metadata[0]);
-    fillGaugeChart(metadata[0]);
   });
 }
 
@@ -126,7 +125,6 @@ function optionChanged (){
       plotBarChart(samples[dataset]);
       plotBubbleChart(samples[dataset]);
       plotMetaData(metadata[dataset]);
-      fillGaugeChart (metadata[dataset]);
    
    });
   }
