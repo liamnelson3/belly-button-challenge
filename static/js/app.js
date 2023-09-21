@@ -1,113 +1,143 @@
-const endpoint = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json";
+let endpoint = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json";
 
-d3.json(endpoint).then(function(data) {
-  console.log(data);
+let dataPromise = d3.json(endpoint);
+console.log("Data Promise: ", dataPromise);
 
-  let patients = Object.values(data.samples);
-  console.log(patients);
+function init (){
+  let data = d3.json(endpoint).then(function(data) {
+    console.log(data);
 
-  //dropdown for loop
-  let dropdown_init = d3.selectAll("#selDataset");
-  let patient_id = Object.values(data.names);
+    // tie values from samples.json to variables we can use
+    let names = data.names;
+    let samples = data.samples;
+    let metadata = data.metadata;
 
-  for (let k = 0; k < patient_id.length; k++){
-    row = dropdown_init.append("option").text(`${patient_id[k]}`);
-  }
+    dropdownNames (names);
 
-  CreateBar(patients[0])
-});
+    console.log("Names: "+ names);
+    console.log("Samples: " + samples);
+    
+    //use bellow functions to fill plots with data
+    CreateBar(samples[0]);
 
-function CreateBar(data){
+    CreateBubble(samples[0]);
 
-  console.log(data);
+    MetaData(metadata[0]);
+  });
+}
 
-  ids = createLabels(data);
-  console.log(ids);
-  
-  labels = createHoverText(data);
-  
-  values = setX(data);
+function CreateBar(samples){
+  //Top 10 data
+  let values = (samples.sample_values.slice(0,10));
+  values = values.reverse();
 
-  ticks = setTickValues(data);
+  let ids = samples.otu_ids.slice(0,10).map(sample => `OTU ${sample}`);
+  ids = ids.reverse();
+
+  let labels =  (samples.otu_labels.slice(0,10));
+  labels = labels.reverse();
 
   let barData = {
     x: values,
     y: ids,
     text: labels,
+    name: "OTU",
     type: "bar",
     orientation: "h"
-  }
+  };
+
+  let barTrace = [barData];
 
   let layout = {
-    title: `Top 10 OTUs`,
-    tickvals: ticks,
-    height: 600,
-    width: 400
+    title: "<b>Top 10 OTUs</b>",
+    margin: {
+      l: 100,
+      r: 100,
+      t: 100,
+      b: 100
+    }
   };
 
   Plotly.newPlot("bar", barData, layout);
 }
 
-//custom functions
-function createLabels (subjectData) {
-  let sampleOTUIDs = Object.values(subjectData.otu_ids).slice(0, 10).reverse();
+function CreateBubble(samples){
+  let values2 = (samples.sample_values);
 
-  let sampleOTUIDArray = []
+  let ids2 = samples.otu_id;
 
-  for (let i = 0; i < sampleOTUIDs.length; i++) {
-    otu = `OSU ${sampleOTUIDs[i]}`;
-    console.log(otu);
-    sampleOTUIDArray.push(otu);
-  }
-  return sampleOTUIDArray;
+  let labels2 =  (samples.otu_labels);
+
+  let bubbleData = {
+    x: ids2,
+    y: values2,
+    text: labels2,
+    mode: "markers",
+    marker: {
+      size: values2,
+      color: ids2,
+      colorscale: "Earth"
+    }
+  };
+
+  let bubbleTrace = [bubbleData];
+
+  let layout = {
+    hovermode: "closest",
+    xaxis: {title: "<b>OTU ID</b>"}
+  };
+
+  Plotly.newPlot("bubble", bubbleTrace, layout);
 }
 
-function createHoverText (subjectData) {
-  let sampleOTULabels = Object.values(subjectData.otu_labels).slice(0, 10).reverse();
-
-  let sampleOTUNames = []
-
-  for (let j = 0; j < sampleOTULabels.length; j++) {
-    otuLabel = sampleOTULabels[j];
-    console.log(otuLabel);
-    sampleOTUNames.push(otuLabel);
-  }
-  return sampleOTUNames;
-}
-
-function setX(data) {
-  return Object.values(data.sample_values.slice(0, 10)).reverse();
-}
-
-function setTickValues(data){
-  return Object.values(data.otu_ids.slice(0, 10));
-}
-//
-
-d3.selectAll("#selDataset").on("change", optionChanged);
-
-//dropdown function
-function optionChanged(v) {
-  console.log(v);
+function MetaData (metadata){
   
-  letdropdownMenu = d3.select("#selDataset");
+  // category labels
+  let dataLabels = Object.keys(metadata);        
+  // metadata Values
+  let dataValues = Object.values(metadata);
+
+  console.log("Labels " + dataLabels);
+  console.log("values " + dataValues);
+
+  // Clear previous contents
+  d3.select("#sample-metadata").html("");
+
+  for (let i=0; i<7; i++){
+      console.log(dataLabels[i] + " : " + dataValues[i]);
+      d3.select("#sample-metadata").append("h6").text(`${dataLabels[i]}  :  ${dataValues[i]}`);
+  }
+}
+
+function dropdownNames (names) {
+  let dropdownMenu = d3.select("#selDataset");
+
+  //Fill the dropdown with the names and a value that will later match the 
+  for (let i = 0; i<names.length;i++){
+
+    dropdownMenu.append("option").text(names[i]).property("value", i);
+
+  }
+}
+
+function optionChanged() {
+  
+  let dropdownMenu = d3.select("#selDataset");
 
   let dataset = dropdownMenu.property("value");
 
-  console.log(dataset)
+  let data = d3.json(url).then(function(data) {
+    console.log(data);
+ 
+    let samples = data.samples;
+    let metadata = data.metadata;
 
-  function selectValue(selectedID) {
-    return selectedID.id === dataset;
-  }
-
-  function selectInteger(selectedInt) {
-    return selectedInt.id
-  }
-
-  let patientData = patients.filter(selectValue);
-  let updatedMetadata = patientMetadata.filter(selectInteger);
-
-  console.log(updatedMetadata);
-
-  CreateBar(patientData[0], updatedMetadata[0]);
+    CreateBar(samples[dataset]);
+ 
+    CreateBubble(samples[dataset]);
+ 
+    MetaData(metadata[dataset]);
+ });
 }
+
+init();
