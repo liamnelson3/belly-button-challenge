@@ -4,140 +4,131 @@ let dataPromise = d3.json(endpoint);
 console.log("Data Promise: ", dataPromise);
 
 function init (){
-  let data = d3.json(endpoint).then(function(data) {
+  let data = d3.json(url).then(function(data) {
     console.log(data);
 
-    // tie values from samples.json to variables we can use
     let names = data.names;
     let samples = data.samples;
     let metadata = data.metadata;
 
-    dropdownNames (names);
+    init_dropdown (names);
 
     console.log("Names: "+ names);
     console.log("Samples: " + samples);
     
-    //use bellow functions to fill plots with data
-    CreateBar(samples[0]);
-
-    CreateBubble(samples[0]);
-
-    MetaData(metadata[0]);
+    plotBarChart(samples[0]);
+    plotBubbleChart(samples[0]);
+    plotMetaData(metadata[0]);
+    fillGaugeChart(metadata[0]);
   });
 }
 
-function CreateBar(samples){
-  //Top 10 data
-  let values = (samples.sample_values.slice(0,10));
-  values = values.reverse();
-
-  let ids = samples.otu_ids.slice(0,10).map(sample => `OTU ${sample}`);
-  ids = ids.reverse();
-
-  let labels =  (samples.otu_labels.slice(0,10));
-  labels = labels.reverse();
-
-  let barData = {
-    x: values,
-    y: ids,
-    text: labels,
-    name: "OTU",
-    type: "bar",
-    orientation: "h"
-  };
-
-  let barTrace = [barData];
-
-  let layout = {
-    title: "<b>Top 10 OTUs</b>",
-    margin: {
-      l: 100,
-      r: 100,
-      t: 100,
-      b: 100
-    }
-  };
-
-  Plotly.newPlot("bar", barData, layout);
+function plotBarChart (samples){
+    
+    let numSamples = (samples.sample_values.slice(0,10));
+    numSamples = numSamples.reverse();
+    
+    let axis = samples.otu_ids.slice(0,10).map(sample => `OTU ${sample}`);
+    axis = axis.reverse();
+ 
+    let labels =  (samples.otu_labels.slice(0,10));
+    labels = labels.reverse();
+        
+    let trace = {
+        x: numSamples,
+        y: axis,
+        text: labels,
+        name: "OTU",
+        type: "bar",
+        orientation: "h"
+   };
+   
+   let traceData = [trace];
+   
+   let layout = {
+     title: "<b>Top 10 OTUs</b>",
+     margin: {
+       l: 100,
+       r: 100,
+       t: 100,
+       b: 100
+     }
+   };
+   
+   Plotly.newPlot("bar", traceData, layout);
 }
 
-function CreateBubble(samples){
-  let values2 = (samples.sample_values);
-
-  let ids2 = samples.otu_id;
-
-  let labels2 =  (samples.otu_labels);
-
-  let bubbleData = {
-    x: ids2,
-    y: values2,
-    text: labels2,
-    mode: "markers",
-    marker: {
-      size: values2,
-      color: ids2,
-      colorscale: "Earth"
-    }
-  };
-
-  let bubbleTrace = [bubbleData];
-
-  let layout = {
-    hovermode: "closest",
-    xaxis: {title: "<b>OTU ID</b>"}
-  };
-
-  Plotly.newPlot("bubble", bubbleTrace, layout);
-}
-
-function MetaData (metadata){
+function plotBubbleChart (samples){
   
-  // category labels
+    let numSamples = (samples.sample_values);
+    let axis = samples.otu_ids;   
+    let labels =  (samples.otu_labels);     
+
+    let trace = {
+        x: axis,
+        y: numSamples,
+        text: labels,
+        mode: "markers",
+        marker:{
+            size:numSamples,
+            color:axis,
+            colorscale:"Earth"
+        }
+      };
+       
+      let traceData = [trace];
+      
+      let layout2 = {
+        hovermode: "closest",
+        xaxis: {title: "<b>OTU ID</b>"}
+      };
+      
+      Plotly.newPlot("bubble", traceData, layout2);
+}
+
+function plotMetaData (metadata){
+
   let dataLabels = Object.keys(metadata);        
-  // metadata Values
-  let dataValues = Object.values(metadata);
+    let dataValues = Object.values(metadata);
 
-  console.log("Labels " + dataLabels);
-  console.log("values " + dataValues);
+    console.log("Labels " + dataLabels);
+    console.log("values " + dataValues);
 
-  // Clear previous contents
-  d3.select("#sample-metadata").html("");
+    d3.select("#sample-metadata").html("");
 
-  for (let i=0; i<7; i++){
-      console.log(dataLabels[i] + " : " + dataValues[i]);
-      d3.select("#sample-metadata").append("h6").text(`${dataLabels[i]}  :  ${dataValues[i]}`);
-  }
+    for (let i=0;i<7;i++){
+        console.log(dataLabels[i] + " : " + dataValues[i]);
+        d3.select("#sample-metadata").append("h6").text(`${dataLabels[i]}  :  ${dataValues[i]}`);
+    }
 }
 
-function dropdownNames (names) {
+function init_dropdown (names){
+
   let dropdownMenu = d3.select("#selDataset");
 
-  //Fill the dropdown with the names and a value that will later match the 
   for (let i = 0; i<names.length;i++){
-
     dropdownMenu.append("option").text(names[i]).property("value", i);
-
   }
 }
 
-function optionChanged() {
-  
-  let dropdownMenu = d3.select("#selDataset");
 
-  let dataset = dropdownMenu.property("value");
+function optionChanged (){
+    let dropdownMenu = d3.select("#selDataset");
 
-  let data = d3.json(url).then(function(data) {
-    console.log(data);
- 
-    let samples = data.samples;
-    let metadata = data.metadata;
+    let dataset = dropdownMenu.property("value");
 
-    CreateBar(samples[dataset]);
- 
-    CreateBubble(samples[dataset]);
- 
-    MetaData(metadata[dataset]);
- });
-}
+    let data = d3.json(url).then(function(data) {
+      console.log(data);
+   
+      let samples = data.samples;
+      let metadata = data.metadata;
+   
+      plotBarChart(samples[dataset]);
+      plotBubbleChart(samples[dataset]);
+      plotMetaData(metadata[dataset]);
+      fillGaugeChart (metadata[dataset]);
+   
+   });
+  }
 
-init();
+  init();
